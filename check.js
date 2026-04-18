@@ -15,7 +15,7 @@ async function run() {
 
   const html = await page.content();
 
-  if (html.includes("4/29") && html.includes("空席")) {
+  if (html.includes("4/28") && html.includes("空席")) {
     await sendMail();
   }
 
