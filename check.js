@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const DATE = "2026-04-28";
+const DATE = "2026-04-29";
 
 const URL =
 `https://ebicaapi-for-booking.ebica.jp/booking/v2_1/stocks
