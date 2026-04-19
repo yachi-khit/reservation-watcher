@@ -1,41 +1,31 @@
-const { chromium } = require("playwright");
+const fetch = require("node-fetch");
 const nodemailer = require("nodemailer");
 
 const URL =
-"https://booking.ebica.jp/webrsv/vacant/e014189501/33801";
+"https://ebicaapi-for-booking.ebica.jp/booking/v2_1/stocks";
+
+const params = new URLSearchParams({
+  shop_id: "33801",
+  sitecd: "e014189501",
+  reservation_date: "2026-04-28"
+});
 
 async function run() {
 
-  const browser = await chromium.launch({
-    headless: true
-  });
+  const res = await fetch(`${URL}?${params}`);
 
-  const page = await browser.newPage();
+  const json = await res.json();
 
-  await page.goto(URL, { waitUntil: "networkidle" });
+  // 空席チェック
+  const hasVacancy =
+    json?.stocks?.some(s => s.available > 0);
 
-  // ===== カレンダー読み込み待ち =====
-  await page.waitForTimeout(7000);
-
-  // ===== 4/29 をクリック =====
-  const targetDay = await page.locator("text=28").first();
-
-  await targetDay.click();
-
-  // 時間表示待ち
-  await page.waitForTimeout(5000);
-
-  // ===== 空席ボタン検知 =====
-  const available = await page.locator("text=予約").count();
-
-  if (available > 0) {
+  if (hasVacancy) {
     console.log("空席あり！");
     await sendMail();
   } else {
     console.log("空席なし");
   }
-
-  await browser.close();
 }
 
 async function sendMail() {
@@ -52,7 +42,7 @@ async function sendMail() {
     from: process.env.GMAIL_USER,
     to: process.env.GMAIL_USER,
     subject: "🎉【予約空き検知】4/29に空きあり",
-    text: URL
+    text: "https://booking.ebica.jp/webrsv/vacant/e014189501/33801"
   });
 }
 
