@@ -8,7 +8,8 @@ const DATE = "2026-04-28";
 const params = new URLSearchParams({
   shop_id: "33801",
   sitecd: "e014189501",
-  reservation_date: DATE
+  reservation_date: DATE,
+  headcount: "2"
 });
 
 async function run() {
