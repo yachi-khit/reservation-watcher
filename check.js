@@ -1,57 +1,36 @@
+const fetch = require("node-fetch");
 const nodemailer = require("nodemailer");
 
-const URL =
-"https://ebicaapi-for-booking.ebica.jp/booking/v2_1/stocks";
+const URL = "API_URLをここに";
 
-const DATE = "2026-04-28";
-
-const params = new URLSearchParams({
-  shop_id: "33801",
-  sitecd: "e014189501",
-  reservation_date: DATE,
-  headcount: "2"
-});
-
-async function run() {
-
-  const res = await fetch(`${URL}?${params}`);
+async function check() {
+  const res = await fetch(URL);
   const json = await res.json();
-  console.log(JSON.stringify(json, null, 2));
 
-  const times = getAvailableTimes(json);
+  // 例：2名予約を見る（変更OK）
+  const stock = json.stocks.find(s => s.headcount === 2);
 
-  if (times.length > 0) {
-    console.log("空席あり:", times);
-    await sendMail(times);
-  } else {
+  if (!stock) {
+    console.log("データなし");
+    return;
+  }
+
+  // ✅ sets > 0 の時間だけ取得
+  const availableTimes = stock.times
+    .filter(t => t.sets > 0)
+    .map(t => t.time);
+
+  if (availableTimes.length === 0) {
     console.log("空席なし");
-  }
-}
-
-function getAvailableTimes(json) {
-
-  const result = new Set();
-
-  for (const stock of json.stocks || []) {
-    for (const t of stock.times || []) {
-
-      const isAvailable =
-        t.symbol === "o" ||
-        t.symbol === "d" ||
-        t.status === "vacant" ||
-        t.status === "few";
-
-      if (isAvailable && t.time) {
-        result.add(t.time);
-      }
-    }
+    return;
   }
 
-  return [...result].sort();
+  console.log("空席あり");
+
+  await sendMail(availableTimes);
 }
 
 async function sendMail(times) {
-
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -63,15 +42,15 @@ async function sendMail(times) {
   await transporter.sendMail({
     from: process.env.GMAIL_USER,
     to: process.env.GMAIL_USER,
-    subject: `🎉【予約空き検知】${DATE} 空席あり`,
+    subject: "予約空席あり",
     text:
-`以下の時間に空席があります：
+`空席があります！
 
-${times.join("\n")}
-
-予約ページ：
-https://booking.ebica.jp/webrsv/vacant/e014189501/33801`
+空き時間：
+${times.join(", ")}`
   });
+
+  console.log("メール送信完了");
 }
 
-run();
+check();
