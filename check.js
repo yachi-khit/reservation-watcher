@@ -17,7 +17,9 @@ async function run() {
   const vacantTimes = getVacantTimes(json);
 
   if (vacantTimes.length > 0) {
-    console.log("空席あり:", vacantTimes);
+    console.log("空席あり");
+    console.log(vacantTimes);
+
     await sendMail(vacantTimes);
   } else {
     console.log("空席なし");
@@ -26,18 +28,19 @@ async function run() {
 
 function getVacantTimes(json) {
 
-  const times = [];
+  const result = [];
 
-  for (const stock of json.stocks) {
+  for (const stock of json.stocks || []) {
     for (const t of stock.times || []) {
 
-      if (t.status === "vacant" || t.status === "few") {
-        times.push(`${t.time}（${stock.headcount}名）`);
+      if (t.time) {
+        result.push(`${t.time}（${stock.headcount}名）`);
       }
+
     }
   }
 
-  return [...new Set(times)];
+  return [...new Set(result)];
 }
 
 async function sendMail(times) {
