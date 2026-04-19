@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 const nodemailer = require("nodemailer");
 
 const URL = "API_URLをここに";
