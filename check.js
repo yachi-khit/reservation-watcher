@@ -6,7 +6,7 @@ const URL =
 const params = new URLSearchParams({
   shop_id: "33801",
   sitecd: "e014189501",
-  reservation_date: "2026-04-29"
+  reservation_date: "2026-04-28"
 });
 
 async function run() {
@@ -14,22 +14,33 @@ async function run() {
   const res = await fetch(`${URL}?${params}`);
   const json = await res.json();
 
-  console.log(json);
+  const vacantTimes = getVacantTimes(json);
 
-  // ⭐ 正しい空席判定
-  const hasVacancy = json.stocks.some(
-    s => s.times && s.times.length > 0
-  );
-
-  if (hasVacancy) {
-    console.log("空席あり！");
-    await sendMail();
+  if (vacantTimes.length > 0) {
+    console.log("空席あり:", vacantTimes);
+    await sendMail(vacantTimes);
   } else {
     console.log("空席なし");
   }
 }
 
-async function sendMail() {
+function getVacantTimes(json) {
+
+  const times = [];
+
+  for (const stock of json.stocks) {
+    for (const t of stock.times || []) {
+
+      if (t.status === "vacant" || t.status === "few") {
+        times.push(`${t.time}（${stock.headcount}名）`);
+      }
+    }
+  }
+
+  return [...new Set(times)];
+}
+
+async function sendMail(times) {
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -43,7 +54,7 @@ async function sendMail() {
     from: process.env.GMAIL_USER,
     to: process.env.GMAIL_USER,
     subject: "🎉【予約空き検知】空席あり",
-    text: "https://booking.ebica.jp/webrsv/vacant/e014189501/33801"
+    text: `空席時間:\n${times.join("\n")}`
   });
 }
 
