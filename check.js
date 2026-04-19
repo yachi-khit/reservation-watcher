@@ -16,6 +16,7 @@ async function run() {
 
   const res = await fetch(`${URL}?${params}`);
   const json = await res.json();
+  console.log(JSON.stringify(json, null, 2));
 
   const times = getAvailableTimes(json);
 
