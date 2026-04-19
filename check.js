@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 const nodemailer = require("nodemailer");
 
 const URL =
@@ -13,10 +12,10 @@ const params = new URLSearchParams({
 async function run() {
 
   const res = await fetch(`${URL}?${params}`);
-
   const json = await res.json();
 
-  // 空席チェック
+  console.log(json);
+
   const hasVacancy =
     json?.stocks?.some(s => s.available > 0);
 
