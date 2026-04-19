@@ -16,8 +16,10 @@ async function run() {
 
   console.log(json);
 
-  const hasVacancy =
-    json?.stocks?.some(s => s.available > 0);
+  // ⭐ 正しい空席判定
+  const hasVacancy = json.stocks.some(
+    s => s.times && s.times.length > 0
+  );
 
   if (hasVacancy) {
     console.log("空席あり！");
@@ -40,7 +42,7 @@ async function sendMail() {
   await transporter.sendMail({
     from: process.env.GMAIL_USER,
     to: process.env.GMAIL_USER,
-    subject: "🎉【予約空き検知】4/29に空きあり",
+    subject: "🎉【予約空き検知】空席あり",
     text: "https://booking.ebica.jp/webrsv/vacant/e014189501/33801"
   });
 }
